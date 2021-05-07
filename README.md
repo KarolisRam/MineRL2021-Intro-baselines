@@ -20,17 +20,26 @@ This is the same code as in standalone files, but with extra documentation and f
 
 ## Standalone files
 These agents are located in the [standalone](https://github.com/KarolisRam/MineRL2021-Intro-baselines/tree/main/standalone) directory.  
-The requirements can be installed via:  
+MineRL requires [JDK8](https://www.minerl.io/docs/tutorials/index.html) to be installed first.
+After that, run:  
 ```
+pip install --upgrade minerl
 pip install pytorch
-pip install minerl
 pip install stable_baselines3
 ```
 The agents can be run with:  
-`python fully_scripted_fixed_seed.py`  
-`python fully_scripted.py`  
-`python BC_plus_script.py`  
-`python RL_plus_script.py`  
+```
+python fully_scripted_fixed_seed.py
+```
+```
+python fully_scripted.py
+```
+```
+python BC_plus_script.py
+```
+```
+python RL_plus_script.py
+```
 The BC and RL ones come with pretrained models. If you want to train them yourself, you will have to uncomment the `train()` line.
 
 ## Submittable repository
