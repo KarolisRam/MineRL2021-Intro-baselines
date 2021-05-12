@@ -44,3 +44,21 @@ The BC and RL ones come with pretrained models. If you want to train them yourse
 
 ## Submittable repository
 Under construction.
+
+
+## Results
+Baseline results over several thousands of episodes can be seen below:  
+
+![](img/baselines_tables.png)
+
+## Videos
+Some videos of agents in action (best watched at 2x speed). Filmed using the [interactive mode](https://minerl.io/docs/tutorials/minerl_tools.html#interactive-mode-minerl-interactor).  
+
+[MineRL agent trained to chop trees released in a village](https://www.youtube.com/watch?v=f3ggLEyTHRQ)  
+[MineRL fully scripted agent, good seed](https://www.youtube.com/watch?v=xtPPwPmPmkU)  
+[MineRL fully scripted agent, bad seed](https://www.youtube.com/watch?v=0-uTKbHklmY)  
+[MineRL RL trained on Treechop + scripted agent](https://www.youtube.com/watch?v=dtH_Yn0yWLI)  
+
+
+## Credits
+Thank you to [Anssi Kanervisto](https://github.com/Miffyli) for developing the Behavioural Cloning part of the baselines.
