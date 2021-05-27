@@ -1,5 +1,5 @@
 # MineRL2021-Intro-baselines
-MineRL 2021 Intro track has three baseline agents:
+[MineRL 2021](https://minerl.io/) Intro track has three baseline agents:
 1. Fully scripted
 2. Behavioural cloning (BC) plus scripted
 3. Reinforcement Learning (RL) plus scripted
