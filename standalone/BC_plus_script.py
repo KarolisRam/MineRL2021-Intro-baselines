@@ -65,21 +65,6 @@ class NatureCNN(nn.Module):
         return self.linear(self.cnn(observations))
 
 
-class PovOnlyObservation(gym.ObservationWrapper):
-    """
-    Turns the observation space into POV only, ignoring the inventory. This is needed for stable_baselines3 RL agents,
-    as they don't yet support dict observations. The support should be coming soon (as of April 2021).
-    See following PR for details:
-    https://github.com/DLR-RM/stable-baselines3/pull/243
-    """
-    def __init__(self, env):
-        super().__init__(env)
-        self.observation_space = self.env.observation_space['pov']
-
-    def observation(self, observation):
-        return observation['pov']
-
-
 class ActionShaping(gym.ActionWrapper):
     """
     The default MineRL action space is the following dict:
@@ -315,7 +300,6 @@ def test():
     # https://minerl.io/docs/tutorials/minerl_tools.html#interactive-mode-minerl-interactor
     # env.make_interactive(port=6666, realtime=True)
 
-    env = PovOnlyObservation(env)
     env = ActionShaping(env, always_attack=True)
     env1 = env.unwrapped
 
@@ -336,7 +320,7 @@ def test():
             #   - Add/remove batch dimensions
             #   - Transpose image (needs to be channels-last)
             #   - Normalize image
-            obs = th.from_numpy(obs.transpose(2, 0, 1)[None].astype(np.float32) / 255).cuda()
+            obs = th.from_numpy(obs['pov'].transpose(2, 0, 1)[None].astype(np.float32) / 255).cuda()
             # Turn logits into probabilities
             probabilities = th.softmax(network(obs), dim=1)[0]
             # Into numpy
