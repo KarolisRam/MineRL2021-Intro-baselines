@@ -19,7 +19,7 @@ This is the same code as in standalone files, but with extra documentation and f
 [MineRL BC+scripted](https://colab.research.google.com/drive/1qfjHCQkukFcR9w1aPvGJyQxOa-Gv7Gt_?usp=sharing)
 
 ## Standalone files
-These agents are located in the [standalone](https://github.com/KarolisRam/MineRL2021-Intro-baselines/tree/main/standalone) directory.  
+These are used to run the agents on your local machine and are located in the [standalone](https://github.com/KarolisRam/MineRL2021-Intro-baselines/tree/main/standalone) directory.  
 MineRL requires [JDK8](https://www.minerl.io/docs/tutorials/index.html) to be installed first.
 After that, run:  
 ```
@@ -40,7 +40,7 @@ python BC_plus_script.py
 ```
 python RL_plus_script.py
 ```
-The BC and RL ones come with pretrained models. If you want to train them yourself, you will have to uncomment the `train()` line.
+The BC and RL ones come with pretrained models. If you want to train them yourself, you will have to uncomment the `train()` line at the end of the file.
 
 ## Submittable repository
 Under construction.
@@ -61,4 +61,4 @@ Some videos of agents in action (best watched at 2x speed). Filmed using the [in
 
 
 ## Credits
-Thank you to [Anssi Kanervisto](https://github.com/Miffyli) for developing the Behavioural Cloning part of the baselines.
+Thank you to [Anssi Kanervisto](https://github.com/Miffyli) for developing the Behavioural cloning part of the baselines.
