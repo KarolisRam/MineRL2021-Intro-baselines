@@ -224,7 +224,7 @@ def train():
             tqdm.write("Iteration {}. Loss {:<10.3f}".format(iter_count, mean_loss))
             losses.clear()
 
-    th.save(network, TRAIN_MODEL_NAME)
+    th.save(network.state_dict(), TRAIN_MODEL_NAME)
     del data
 
 
@@ -292,7 +292,8 @@ def get_action_sequence():
 
 
 def test():
-    network = th.load(TEST_MODEL_NAME).cuda()
+    network = NatureCNN((3, 64, 64), 7).cuda()
+    network.load_state_dict(th.load(TEST_MODEL_NAME))
 
     env = gym.make('MineRLObtainDiamond-v0')
 
