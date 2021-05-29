@@ -42,8 +42,15 @@ python RL_plus_script.py
 ```
 The BC and RL ones come with pretrained models. If you want to train them yourself, you will have to uncomment the `train()` line at the end of the file.
 
-## Submittable repository
-Under construction.
+## Submittable repositories  
+
+The following links will lead you to submittable versions of the baselines:
+
+[Fully scripted](https://github.com/minerllabs/minerl-diamond-2021-intro-scripted-submission-kit)
+
+[Behavioural cloning plus script](https://github.com/minerllabs/minerl-diamond-2021-intro-bc-submission-kit)
+
+[Reinforcement learning plus script](https://github.com/minerllabs/minerl-diamond-2021-intro-rl-submission-kit)
 
 
 ## Results
