@@ -23,9 +23,7 @@ These are used to run the agents on your local machine and are located in the [s
 MineRL requires [JDK8](https://www.minerl.io/docs/tutorials/index.html) to be installed first.
 After that, run:  
 ```
-pip install --upgrade minerl
-pip install pytorch
-pip install stable_baselines3
+pip install -r requirements.txt
 ```
 The agents can be run with:  
 ```
