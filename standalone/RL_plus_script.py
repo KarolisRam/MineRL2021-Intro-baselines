@@ -117,6 +117,14 @@ class ActionShaping(gym.ActionWrapper):
 
 
 def train():
+    if os.environ.get("WANDB_PROJECT"):
+        import wandb
+        wandb.init(
+            sync_tensorboard=True,
+            name=experiment_name,
+            monitor_gym=True,
+            save_code=True,
+        )
 
     env = DummyVecEnv([make_env(i) for i in range(1)])
     # For all the PPO hyperparameters you could tune see this:
