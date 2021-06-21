@@ -116,10 +116,11 @@ class ActionShaping(gym.ActionWrapper):
         return self.actions[action]
 
 
-def train():
-    if os.environ.get("WANDB_PROJECT"):
+def train(wandb_project_name=None):
+    if wandb_project_name:
         import wandb
         wandb.init(
+            project=wandb_project_name,
             sync_tensorboard=True,
             name=experiment_name,
             monitor_gym=True,
@@ -244,9 +245,12 @@ def test():
 
 
 def main():
-    train()
-    # test()
-
+    # uncomment either one of the following lines to train
+    # if `wandb_project_name` is set, the training logs and videos
+    # will be uploaded to Weights and Biases
+    # train()
+    # train(wandb_project_name="minerl")
+    test()
 
 if __name__ == '__main__':
     main()
