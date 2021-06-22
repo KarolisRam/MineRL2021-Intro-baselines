@@ -8,7 +8,6 @@ It uses less than 8GB RAM and achieves an average reward of 8.3.
 
 import gym
 import time
-import os
 from stable_baselines3 import PPO
 from stable_baselines3.common.vec_env import DummyVecEnv
 import minerl  # it's important to import minerl after SB3, otherwise model.save doesn't work...
@@ -23,7 +22,9 @@ TEST_MODEL_NAME = 'potato'  # name to use when loading the trained agent.
 TEST_EPISODES = 10  # number of episodes to test the agent for.
 MAX_TEST_EPISODE_LEN = 18000  # 18k is the default for MineRLObtainDiamond.
 TREECHOP_STEPS = 2000  # number of steps to run RL lumberjack for in evaluations.
+
 experiment_name = f"ppo_{int(time.time())}"
+
 
 def make_env(idx):
     def thunk():
@@ -34,6 +35,7 @@ def make_env(idx):
             env = gym.wrappers.Monitor(env, f"videos/{experiment_name}")
         return env
     return thunk
+
 
 class PovOnlyObservation(gym.ObservationWrapper):
     """
@@ -129,6 +131,7 @@ def train(wandb_project_name=None):
 
     env = DummyVecEnv([make_env(i) for i in range(1)])
     # For all the PPO hyperparameters you could tune see this:
+    # https://github.com/DLR-RM/stable-baselines3/blob/6f822b9ed7d6e8f57e5a58059923a5b24e8db283/stable_baselines3/ppo/ppo.py#L16
     model = PPO('CnnPolicy', env, verbose=1, tensorboard_log=f"runs/{experiment_name}")
     model.learn(total_timesteps=TRAIN_TIMESTEPS)  # 2m steps is about 8h at 70 FPS
     model.save(TRAIN_MODEL_NAME)
@@ -251,6 +254,7 @@ def main():
     # train()
     # train(wandb_project_name="minerl")
     test()
+
 
 if __name__ == '__main__':
     main()
