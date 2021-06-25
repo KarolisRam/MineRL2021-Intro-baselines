@@ -253,7 +253,7 @@ def main():
     # if `wandb_project_name` is set, the training logs and videos
     # will be uploaded to Weights and Biases
     # train()
-    train(wandb_project_name="minerl")
+    # train(wandb_project_name="minerl")
     test()
 
 
