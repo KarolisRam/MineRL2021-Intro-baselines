@@ -14,21 +14,21 @@ import minerl  # it's important to import minerl after SB3, otherwise model.save
 
 
 # Parameters:
-TRAIN_TIMESTEPS = 2000000  # number of steps to train the agent for. At 70 FPS 2m steps take about 8 hours.
-TRAIN_ENV = 'MineRLTreechop-v0'  # training environment for the RL agent. Could use MineRLObtainDiamondDense-v0 here.
-TRAIN_MODEL_NAME = 'potato'  # name to use when saving the trained agent.
-TEST_MODEL_NAME = 'potato'  # name to use when loading the trained agent.
-
-TEST_EPISODES = 10  # number of episodes to test the agent for.
-MAX_TEST_EPISODE_LEN = 18000  # 18k is the default for MineRLObtainDiamond.
-TREECHOP_STEPS = 2000  # number of steps to run RL lumberjack for in evaluations.
-
+config = {
+    "TRAIN_TIMESTEPS": 2000000,  # number of steps to train the agent for. At 70 FPS 2m steps take about 8 hours.
+    "TRAIN_ENV": 'MineRLTreechop-v0',  # training environment for the RL agent. Could use MineRLObtainDiamondDense-v0 here.
+    "TRAIN_MODEL_NAME": 'potato',  # name to use when saving the trained agent.
+    "TEST_MODEL_NAME": 'potato',  # name to use when loading the trained agent.
+    "TEST_EPISODES": 10,  # number of episodes to test the agent for.
+    "MAX_TEST_EPISODE_LEN": 18000,  # 18k is the default for MineRLObtainDiamond.
+    "TREECHOP_STEPS": 2000,  # number of steps to run RL lumberjack for in evaluations.
+}
 experiment_name = f"ppo_{int(time.time())}"
 
 
 def make_env(idx):
     def thunk():
-        env = gym.make(TRAIN_ENV)
+        env = gym.make(config["TRAIN_ENV"])
         env = PovOnlyObservation(env)
         env = ActionShaping(env, always_attack=True)
         if idx == 0:
@@ -123,6 +123,7 @@ def train(wandb_project_name=None):
         import wandb
         wandb.init(
             project=wandb_project_name,
+            config=config,
             sync_tensorboard=True,
             name=experiment_name,
             monitor_gym=True,
@@ -133,8 +134,8 @@ def train(wandb_project_name=None):
     # For all the PPO hyperparameters you could tune see this:
     # https://github.com/DLR-RM/stable-baselines3/blob/6f822b9ed7d6e8f57e5a58059923a5b24e8db283/stable_baselines3/ppo/ppo.py#L16
     model = PPO('CnnPolicy', env, verbose=1, tensorboard_log=f"runs/{experiment_name}")
-    model.learn(total_timesteps=TRAIN_TIMESTEPS)  # 2m steps is about 8h at 70 FPS
-    model.save(TRAIN_MODEL_NAME)
+    model.learn(total_timesteps=config["TRAIN_TIMESTEPS"])  # 2m steps is about 8h at 70 FPS
+    model.save(config["TRAIN_MODEL_NAME"])
 
     env.close()
 
@@ -213,19 +214,19 @@ def test():
     env = ActionShaping(env, always_attack=True)
     env1 = env.unwrapped
 
-    model = PPO.load(TEST_MODEL_NAME, verbose=1)
+    model = PPO.load(config["TEST_MODEL_NAME"], verbose=1)
     model.set_env(env)
 
     action_sequence = get_action_sequence()
 
-    for episode in range(TEST_EPISODES):
+    for episode in range(config["TEST_EPISODES"]):
         obs = env.reset()
         done = False
         total_reward = 0
         steps = 0
 
         # RL part to get some logs:
-        for i in range(TREECHOP_STEPS):
+        for i in range(config["TREECHOP_STEPS"]):
             action = model.predict(obs)
             obs, reward, done, _ = env.step(action[0])
             total_reward += reward
@@ -235,7 +236,7 @@ def test():
 
         # scripted part to use the logs:
         if not done:
-            for i, action in enumerate(action_sequence[:MAX_TEST_EPISODE_LEN - TREECHOP_STEPS]):
+            for i, action in enumerate(action_sequence[:config["MAX_TEST_EPISODE_LEN"] - config["TREECHOP_STEPS"]]):
                 obs, reward, done, _ = env1.step(str_to_act(env1, action))
                 total_reward += reward
                 steps += 1
