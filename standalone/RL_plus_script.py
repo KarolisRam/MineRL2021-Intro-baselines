@@ -10,6 +10,7 @@ import gym
 import time
 from stable_baselines3 import PPO
 from stable_baselines3.common.vec_env import DummyVecEnv
+from torch.utils.tensorboard import SummaryWriter
 import minerl  # it's important to import minerl after SB3, otherwise model.save doesn't work...
 
 
@@ -31,11 +32,23 @@ def make_env(idx):
         env = gym.make(config["TRAIN_ENV"])
         env = PovOnlyObservation(env)
         env = ActionShaping(env, always_attack=True)
+        env = gym.wrappers.RecordEpisodeStatistics(env) # record stats such as returns
         if idx == 0:
-            env = gym.wrappers.Monitor(env, f"videos/{experiment_name}")
+            env = gym.wrappers.Monitor(env, f"videos/{experiment_name}") # record videos
         return env
     return thunk
 
+
+def track_exp(project_name=None):
+    import wandb
+    wandb.init(
+        project=project_name,
+        config=config,
+        sync_tensorboard=True,
+        name=experiment_name,
+        monitor_gym=True,
+        save_code=True,
+    )
 
 class PovOnlyObservation(gym.ObservationWrapper):
     """
@@ -118,18 +131,7 @@ class ActionShaping(gym.ActionWrapper):
         return self.actions[action]
 
 
-def train(wandb_project_name=None):
-    if wandb_project_name:
-        import wandb
-        wandb.init(
-            project=wandb_project_name,
-            config=config,
-            sync_tensorboard=True,
-            name=experiment_name,
-            monitor_gym=True,
-            save_code=True,
-        )
-
+def train():
     env = DummyVecEnv([make_env(i) for i in range(1)])
     # For all the PPO hyperparameters you could tune see this:
     # https://github.com/DLR-RM/stable-baselines3/blob/6f822b9ed7d6e8f57e5a58059923a5b24e8db283/stable_baselines3/ppo/ppo.py#L16
@@ -204,6 +206,7 @@ def get_action_sequence():
 
 
 def test():
+    writer = SummaryWriter(f"runs/{experiment_name}")
     env = gym.make('MineRLObtainDiamond-v0')
 
     # optional interactive mode, where you can connect to your agent and play together (see link for details):
@@ -212,6 +215,7 @@ def test():
 
     env = PovOnlyObservation(env)
     env = ActionShaping(env, always_attack=True)
+    env = gym.wrappers.Monitor(env, f"videos/{experiment_name}")
     env1 = env.unwrapped
 
     model = PPO.load(config["TEST_MODEL_NAME"], verbose=1)
@@ -243,17 +247,17 @@ def test():
                 if done:
                     break
 
-        print(f'Episode #{episode + 1} reward: {total_reward}\t\t episode length: {steps}')
+        print(f'Episode #{episode + 1} return: {total_reward}\t\t episode length: {steps}')
+        writer.add_scalar("return", total_reward, global_step=episode)
 
     env.close()
 
 
 def main():
-    # uncomment either one of the following lines to train
-    # if `wandb_project_name` is set, the training logs and videos
-    # will be uploaded to Weights and Biases
+    # uncomment the following to upload the logs and videos to Weights and Biases
+    track_exp(project_name="minerl")
+
     # train()
-    # train(wandb_project_name="minerl")
     test()
 
 
