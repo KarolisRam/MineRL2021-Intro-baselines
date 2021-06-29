@@ -255,7 +255,7 @@ def test():
 
 def main():
     # uncomment the following to upload the logs and videos to Weights and Biases
-    track_exp(project_name="minerl")
+    # track_exp(project_name="minerl")
 
     # train()
     test()
