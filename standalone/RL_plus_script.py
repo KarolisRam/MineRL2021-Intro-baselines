@@ -50,6 +50,7 @@ def track_exp(project_name=None):
         save_code=True,
     )
 
+
 class PovOnlyObservation(gym.ObservationWrapper):
     """
     Turns the observation space into POV only, ignoring the inventory. This is needed for stable_baselines3 RL agents,
