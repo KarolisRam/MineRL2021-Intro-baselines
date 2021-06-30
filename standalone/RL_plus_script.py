@@ -206,8 +206,10 @@ def get_action_sequence():
 
 
 def test():
+    action_sequence = get_action_sequence()
     writer = SummaryWriter(f"runs/{experiment_name}")
-    env = gym.make('MineRLObtainDiamond-v0')
+    env = gym.make('MineRLObtainDiamond-v0').env
+    env = gym.wrappers.TimeLimit(env, config["TREECHOP_STEPS"])
 
     # optional interactive mode, where you can connect to your agent and play together (see link for details):
     # https://minerl.io/docs/tutorials/minerl_tools.html#interactive-mode-minerl-interactor
@@ -220,8 +222,6 @@ def test():
 
     model = PPO.load(config["TEST_MODEL_NAME"], verbose=1)
     model.set_env(env)
-
-    action_sequence = get_action_sequence()
 
     for episode in range(config["TEST_EPISODES"]):
         obs = env.reset()
