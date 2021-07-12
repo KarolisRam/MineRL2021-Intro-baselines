@@ -13,7 +13,10 @@ from stable_baselines3.common.vec_env import DummyVecEnv
 from torch.utils.tensorboard import SummaryWriter
 import minerl  # it's important to import minerl after SB3, otherwise model.save doesn't work...
 from minerl.herobraine.wrappers.video_recording_wrapper import VideoRecordingWrapper
-import wandb
+try:
+    import wandb
+except ImportError:
+    pass
 
 # Parameters:
 config = {
