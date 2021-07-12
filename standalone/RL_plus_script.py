@@ -13,6 +13,7 @@ from stable_baselines3.common.vec_env import DummyVecEnv
 from torch.utils.tensorboard import SummaryWriter
 import minerl  # it's important to import minerl after SB3, otherwise model.save doesn't work...
 from minerl.herobraine.wrappers.video_recording_wrapper import VideoRecordingWrapper
+import wandb
 
 # Parameters:
 config = {
@@ -26,18 +27,12 @@ config = {
 }
 experiment_name = f"ppo_{int(time.time())}"
 
-# Set following to true if you want Wandb logging
-WANDB_LOGGING = False
-
-if WANDB_LOGGING:
-    import wandb
-
 
 def make_env(idx):
     def thunk():
         env = gym.make(config["TRAIN_ENV"])
         if idx == 0:
-            env = VideoRecordingWrapper(env, "training_videos")  # record videos
+            env = gym.wrappers.Monitor(env, f"videos/{experiment_name}") # record videos
         env = PovOnlyObservation(env)
         env = ActionShaping(env, always_attack=True)
         env = gym.wrappers.RecordEpisodeStatistics(env)  # record stats such as returns
@@ -52,6 +47,7 @@ def track_exp(project_name=None):
         config=config,
         sync_tensorboard=True,
         name=experiment_name,
+        monitor_gym=True,
         save_code=True,
     )
 
@@ -256,16 +252,16 @@ def test():
         print(f'Episode #{episode + 1} return: {total_reward}\t\t episode length: {steps}')
         writer.add_scalar("return", total_reward, global_step=episode)
 
-    # Add video to wandb logging if we want to record it
-    if WANDB_LOGGING:
-        wandb.log({"video": wandb.Video("test_videos/0.mp4", fps=20, caption="Trained agent")})
+        # Add video to wandb logging if we want to record it
+        if wandb.run:
+            wandb.log({"video": wandb.Video(f"test_videos/{episode}.mp4")})
 
     env.close()
 
 
 def main():
-    if WANDB_LOGGING:
-        track_exp(project_name="minerl")
+    # uncomment the following to upload the logs and videos to Weights and Biases
+    # track_exp(project_name="minerl")
 
     # train()
     test()
