@@ -14,6 +14,7 @@ from torch.utils.tensorboard import SummaryWriter
 import minerl  # it's important to import minerl after SB3, otherwise model.save doesn't work...
 from minerl.herobraine.wrappers.video_recording_wrapper import VideoRecordingWrapper
 try:
+    wandb = None
     import wandb
 except ImportError:
     pass
@@ -256,7 +257,7 @@ def test():
         writer.add_scalar("return", total_reward, global_step=episode)
 
         # Add video to wandb logging if we want to record it
-        if wandb.run:
+        if wandb is not None:
             wandb.log({"video": wandb.Video(f"test_videos/{episode}.mp4")})
 
     env.close()
