@@ -257,7 +257,7 @@ def test():
         writer.add_scalar("return", total_reward, global_step=episode)
 
         # Add video to wandb logging if we want to record it
-        if wandb is not None:
+        if wandb is not None and wandb.run:
             wandb.log({"video": wandb.Video(f"test_videos/{episode}.mp4")})
 
     env.close()
