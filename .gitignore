@@ -2,3 +2,4 @@ wandb
 videos
 runs
 logs
+*.mp4
