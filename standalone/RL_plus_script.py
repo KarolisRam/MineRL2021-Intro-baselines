@@ -279,16 +279,16 @@ def test():
         for episode in range(config["TEST_EPISODES"]):
             completed_process = subprocess.run(("ffmpeg", "-nostats", "-y", "-i", f"test_videos/{episode}.mp4", "test_videos/encoded.mp4"))
             if completed_process.returncode == 0:
-                wandb.log({f"video_{episode}": wandb.Video("test_videos/encoded.mp4", caption=f"Evaluation video {episode}")})
+                wandb.log({f"video": wandb.Video("test_videos/encoded.mp4", caption=f"Evaluation video {episode}")})
             else:
                 print("[Warning] Encoding test video was not succesfull. Wandb will not contain a evaluation video.")
 
 
 def main():
     # uncomment the following to upload the logs and videos to Weights and Biases
-    track_exp(project_name="minerl")
+    # track_exp(project_name="minerl")
 
-    train()
+    # train()
     test()
 
 
