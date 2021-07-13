@@ -6,13 +6,17 @@ With default parameters it trains in about 8 hours on a machine with a GeForce R
 It uses less than 8GB RAM and achieves an average reward of 8.3.
 """
 
-import gym
 import time
+import subprocess
+
+import gym
 from stable_baselines3 import PPO
 from stable_baselines3.common.vec_env import DummyVecEnv
 from torch.utils.tensorboard import SummaryWriter
 import minerl  # it's important to import minerl after SB3, otherwise model.save doesn't work...
 from minerl.herobraine.wrappers.video_recording_wrapper import VideoRecordingWrapper
+# If you want to try out wandb integration, scroll to the bottom an uncomment line regarding `track_exp`
+# Note that this will require ffmpeg for recording videos
 try:
     wandb = None
     import wandb
@@ -145,7 +149,12 @@ def train():
     model.learn(total_timesteps=config["TRAIN_TIMESTEPS"])  # 2m steps is about 8h at 70 FPS
     model.save(config["TRAIN_MODEL_NAME"])
 
-    env.close()
+    # MineRL might throw an exception when closing, but it can be ignored (the environment does close).
+    # We need to do this to correctly record the final video.
+    try:
+        env.close()
+    except Exception:
+        pass
 
 
 def str_to_act(env, actions):
@@ -221,6 +230,8 @@ def test():
     # https://minerl.io/docs/tutorials/minerl_tools.html#interactive-mode-minerl-interactor
     # env.make_interactive(port=6666, realtime=True)
 
+    # We are using builtin MineRL video-recorder wrapper for test videos, because gym.wrappers.Monitor does not
+    # allow early resetting (we wish to use it to speed things up).
     env = VideoRecordingWrapper(env, "test_videos")
     env = PovOnlyObservation(env)
     env = ActionShaping(env, always_attack=True)
@@ -256,18 +267,28 @@ def test():
         print(f'Episode #{episode + 1} return: {total_reward}\t\t episode length: {steps}')
         writer.add_scalar("return", total_reward, global_step=episode)
 
-        # Add video to wandb logging if we want to record it
-        if wandb is not None and wandb.run:
-            wandb.log({"video": wandb.Video(f"test_videos/{episode}.mp4")})
+    # MineRL might throw an exception when closing, but it can be ignored (the environment does close).
+    # We need to do this to correctly record the final video.
+    try:
+        env.close()
+    except Exception:
+        pass
 
-    env.close()
+    # Add videos to wandb logging if we want to record it
+    if wandb is not None and wandb.run:
+        for episode in range(config["TEST_EPISODES"]):
+            completed_process = subprocess.run(("ffmpeg", "-nostats", "-y", "-i", f"test_videos/{episode}.mp4", "test_videos/encoded.mp4"))
+            if completed_process.returncode == 0:
+                wandb.log({"video": wandb.Video("test_videos/encoded.mp4", caption=f"Evaluation video {episode}")})
+            else:
+                print("[Warning] Encoding test video was not succesfull. Wandb will not contain a evaluation video.")
 
 
 def main():
     # uncomment the following to upload the logs and videos to Weights and Biases
-    # track_exp(project_name="minerl")
+    track_exp(project_name="minerl")
 
-    # train()
+    train()
     test()
 
 
