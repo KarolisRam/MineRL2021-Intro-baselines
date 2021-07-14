@@ -227,7 +227,7 @@ def test():
 
         # RL part to get some logs:
         for i in range(config["TREECHOP_STEPS"]):
-            action = model.predict(obs)
+            action = model.predict(obs.copy())
             obs, reward, done, _ = env.step(action[0])
             total_reward += reward
             steps += 1
