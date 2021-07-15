@@ -235,7 +235,7 @@ def test():
     env = VideoRecordingWrapper(env, "test_videos")
     env = PovOnlyObservation(env)
     env = ActionShaping(env, always_attack=True)
-    env1 = env.unwrapped
+    env1 = env.env
 
     model = PPO.load(config["TEST_MODEL_NAME"], verbose=1)
     model.set_env(env)
