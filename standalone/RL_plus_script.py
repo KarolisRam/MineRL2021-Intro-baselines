@@ -224,7 +224,7 @@ def test():
     action_sequence = get_action_sequence()
     writer = SummaryWriter(f"runs/{experiment_name}")
     env = gym.make('MineRLObtainDiamond-v0').env
-    env = gym.wrappers.TimeLimit(env, config["TREECHOP_STEPS"])
+    env = gym.wrappers.TimeLimit(env, config["TREECHOP_STEPS"] + len(action_sequence))
 
     # optional interactive mode, where you can connect to your agent and play together (see link for details):
     # https://minerl.io/docs/tutorials/minerl_tools.html#interactive-mode-minerl-interactor
