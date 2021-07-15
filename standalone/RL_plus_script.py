@@ -32,6 +32,7 @@ config = {
     "TEST_EPISODES": 10,  # number of episodes to test the agent for.
     "MAX_TEST_EPISODE_LEN": 18000,  # 18k is the default for MineRLObtainDiamond.
     "TREECHOP_STEPS": 2000,  # number of steps to run RL lumberjack for in evaluations.
+    "RECORD_TRAINING_VIDEOS": False,  # if True, records videos of all episodes done during training in videos/{experiment_name}
 }
 experiment_name = f"ppo_{int(time.time())}"
 
@@ -39,8 +40,8 @@ experiment_name = f"ppo_{int(time.time())}"
 def make_env(idx):
     def thunk():
         env = gym.make(config["TRAIN_ENV"])
-        if idx == 0:
-            env = gym.wrappers.Monitor(env, f"videos/{experiment_name}") # record videos
+        if idx == 0 and config["RECORD_TRAINING_VIDEOS"]:
+            env = gym.wrappers.Monitor(env, f"videos/{experiment_name}")
         env = PovOnlyObservation(env)
         env = ActionShaping(env, always_attack=True)
         env = gym.wrappers.RecordEpisodeStatistics(env)  # record stats such as returns
