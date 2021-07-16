@@ -7,7 +7,7 @@
 The agents can be run in three different ways:
 1. Colab notebook
 2. Standalone file
-3. Submittable repository (Under construction)
+3. Submittable repository
 
 ## Colab notebooks
 This is the same code as in standalone files, but with extra documentation and fully running in Colab. The RL_plus_script is not included as it takes too long to run fully in Colab. The notebooks are:
