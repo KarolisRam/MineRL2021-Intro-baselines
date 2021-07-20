@@ -6,12 +6,19 @@ With default parameters it trains in about 8 hours on a machine with a GeForce R
 It uses less than 8GB RAM and achieves an average reward of 8.3.
 """
 
-import gym
 import time
+import gym
 from stable_baselines3 import PPO
 from stable_baselines3.common.vec_env import DummyVecEnv
+from torch.utils.tensorboard import SummaryWriter
 import minerl  # it's important to import minerl after SB3, otherwise model.save doesn't work...
 
+# If you want to try out wandb integration, scroll to the bottom an uncomment line regarding `track_exp`
+try:
+    wandb = None
+    import wandb
+except ImportError:
+    pass
 
 # Parameters:
 config = {
@@ -22,6 +29,8 @@ config = {
     "TEST_EPISODES": 10,  # number of episodes to test the agent for.
     "MAX_TEST_EPISODE_LEN": 18000,  # 18k is the default for MineRLObtainDiamond.
     "TREECHOP_STEPS": 2000,  # number of steps to run RL lumberjack for in evaluations.
+    "RECORD_TRAINING_VIDEOS": False,  # if True, records videos of all episodes done during training.
+    "RECORD_TEST_VIDEOS": False,  # if True, records videos of all episodes done during evaluation.
 }
 experiment_name = f"ppo_{int(time.time())}"
 
@@ -29,12 +38,25 @@ experiment_name = f"ppo_{int(time.time())}"
 def make_env(idx):
     def thunk():
         env = gym.make(config["TRAIN_ENV"])
+        if idx == 0 and config["RECORD_TRAINING_VIDEOS"]:
+            env = gym.wrappers.Monitor(env, f"train_videos/{experiment_name}")
         env = PovOnlyObservation(env)
         env = ActionShaping(env, always_attack=True)
-        if idx == 0:
-            env = gym.wrappers.Monitor(env, f"videos/{experiment_name}")
+        env = gym.wrappers.RecordEpisodeStatistics(env)  # record stats such as returns
         return env
     return thunk
+
+
+def track_exp(project_name=None):
+    wandb.init(
+        anonymous="allow",
+        project=project_name,
+        config=config,
+        sync_tensorboard=True,
+        name=experiment_name,
+        monitor_gym=True,
+        save_code=True,
+    )
 
 
 class PovOnlyObservation(gym.ObservationWrapper):
@@ -118,18 +140,7 @@ class ActionShaping(gym.ActionWrapper):
         return self.actions[action]
 
 
-def train(wandb_project_name=None):
-    if wandb_project_name:
-        import wandb
-        wandb.init(
-            project=wandb_project_name,
-            config=config,
-            sync_tensorboard=True,
-            name=experiment_name,
-            monitor_gym=True,
-            save_code=True,
-        )
-
+def train():
     env = DummyVecEnv([make_env(i) for i in range(1)])
     # For all the PPO hyperparameters you could tune see this:
     # https://github.com/DLR-RM/stable-baselines3/blob/6f822b9ed7d6e8f57e5a58059923a5b24e8db283/stable_baselines3/ppo/ppo.py#L16
@@ -137,7 +148,11 @@ def train(wandb_project_name=None):
     model.learn(total_timesteps=config["TRAIN_TIMESTEPS"])  # 2m steps is about 8h at 70 FPS
     model.save(config["TRAIN_MODEL_NAME"])
 
-    env.close()
+    # MineRL might throw an exception when closing on Windows, but it can be ignored (the environment does close).
+    try:
+        env.close()
+    except Exception:
+        pass
 
 
 def str_to_act(env, actions):
@@ -204,20 +219,24 @@ def get_action_sequence():
 
 
 def test():
-    env = gym.make('MineRLObtainDiamond-v0')
+    action_sequence = get_action_sequence()
+    writer = SummaryWriter(f"runs/{experiment_name}")
+    env = gym.make('MineRLObtainDiamond-v0').env
+    time_limit = min(config["MAX_TEST_EPISODE_LEN"], config["TREECHOP_STEPS"] + len(action_sequence))
+    env = gym.wrappers.TimeLimit(env, time_limit)
 
     # optional interactive mode, where you can connect to your agent and play together (see link for details):
     # https://minerl.io/docs/tutorials/minerl_tools.html#interactive-mode-minerl-interactor
     # env.make_interactive(port=6666, realtime=True)
 
+    if config["RECORD_TEST_VIDEOS"]:
+        env = gym.wrappers.Monitor(env, f"test_videos/{experiment_name}")
     env = PovOnlyObservation(env)
     env = ActionShaping(env, always_attack=True)
-    env1 = env.unwrapped
+    env1 = env.env
 
     model = PPO.load(config["TEST_MODEL_NAME"], verbose=1)
     model.set_env(env)
-
-    action_sequence = get_action_sequence()
 
     for episode in range(config["TEST_EPISODES"]):
         obs = env.reset()
@@ -243,17 +262,17 @@ def test():
                 if done:
                     break
 
-        print(f'Episode #{episode + 1} reward: {total_reward}\t\t episode length: {steps}')
+        print(f'Episode #{episode + 1} return: {total_reward}\t\t episode length: {steps}')
+        writer.add_scalar("return", total_reward, global_step=episode)
 
     env.close()
 
 
 def main():
-    # uncomment either one of the following lines to train
-    # if `wandb_project_name` is set, the training logs and videos
-    # will be uploaded to Weights and Biases
+    # uncomment the following to upload the logs and videos to Weights and Biases
+    # track_exp(project_name="minerl")
+
     # train()
-    # train(wandb_project_name="minerl")
     test()
 
 
