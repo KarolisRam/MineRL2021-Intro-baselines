@@ -1,5 +1,6 @@
 wandb
-videos
+test_videos
+train_videos
 runs
 logs
 *.mp4
