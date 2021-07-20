@@ -7,16 +7,13 @@ It uses less than 8GB RAM and achieves an average reward of 8.3.
 """
 
 import time
-import subprocess
-
 import gym
 from stable_baselines3 import PPO
 from stable_baselines3.common.vec_env import DummyVecEnv
 from torch.utils.tensorboard import SummaryWriter
 import minerl  # it's important to import minerl after SB3, otherwise model.save doesn't work...
-from minerl.herobraine.wrappers.video_recording_wrapper import VideoRecordingWrapper
+
 # If you want to try out wandb integration, scroll to the bottom an uncomment line regarding `track_exp`
-# Note that this will require ffmpeg for recording videos
 try:
     wandb = None
     import wandb
@@ -32,7 +29,8 @@ config = {
     "TEST_EPISODES": 10,  # number of episodes to test the agent for.
     "MAX_TEST_EPISODE_LEN": 18000,  # 18k is the default for MineRLObtainDiamond.
     "TREECHOP_STEPS": 2000,  # number of steps to run RL lumberjack for in evaluations.
-    "RECORD_TRAINING_VIDEOS": False,  # if True, records videos of all episodes done during training in videos/{experiment_name}
+    "RECORD_TRAINING_VIDEOS": False,  # if True, records videos of all episodes done during training.
+    "RECORD_TEST_VIDEOS": False,  # if True, records videos of all episodes done during evaluation.
 }
 experiment_name = f"ppo_{int(time.time())}"
 
@@ -41,7 +39,7 @@ def make_env(idx):
     def thunk():
         env = gym.make(config["TRAIN_ENV"])
         if idx == 0 and config["RECORD_TRAINING_VIDEOS"]:
-            env = gym.wrappers.Monitor(env, f"videos/{experiment_name}")
+            env = gym.wrappers.Monitor(env, f"train_videos/{experiment_name}")
         env = PovOnlyObservation(env)
         env = ActionShaping(env, always_attack=True)
         env = gym.wrappers.RecordEpisodeStatistics(env)  # record stats such as returns
@@ -150,8 +148,7 @@ def train():
     model.learn(total_timesteps=config["TRAIN_TIMESTEPS"])  # 2m steps is about 8h at 70 FPS
     model.save(config["TRAIN_MODEL_NAME"])
 
-    # MineRL might throw an exception when closing, but it can be ignored (the environment does close).
-    # We need to do this to correctly record the final video.
+    # MineRL might throw an exception when closing on Windows, but it can be ignored (the environment does close).
     try:
         env.close()
     except Exception:
@@ -225,15 +222,15 @@ def test():
     action_sequence = get_action_sequence()
     writer = SummaryWriter(f"runs/{experiment_name}")
     env = gym.make('MineRLObtainDiamond-v0').env
-    env = gym.wrappers.TimeLimit(env, config["TREECHOP_STEPS"] + len(action_sequence))
+    time_limit = min(config["MAX_TEST_EPISODE_LEN"], config["TREECHOP_STEPS"] + len(action_sequence))
+    env = gym.wrappers.TimeLimit(env, time_limit)
 
     # optional interactive mode, where you can connect to your agent and play together (see link for details):
     # https://minerl.io/docs/tutorials/minerl_tools.html#interactive-mode-minerl-interactor
     # env.make_interactive(port=6666, realtime=True)
 
-    # We are using builtin MineRL video-recorder wrapper for test videos, because gym.wrappers.Monitor does not
-    # allow early resetting (we wish to use it to speed things up).
-    env = VideoRecordingWrapper(env, "test_videos")
+    if config["RECORD_TEST_VIDEOS"]:
+        env = gym.wrappers.Monitor(env, f"test_videos/{experiment_name}")
     env = PovOnlyObservation(env)
     env = ActionShaping(env, always_attack=True)
     env1 = env.env
@@ -268,21 +265,7 @@ def test():
         print(f'Episode #{episode + 1} return: {total_reward}\t\t episode length: {steps}')
         writer.add_scalar("return", total_reward, global_step=episode)
 
-    # MineRL might throw an exception when closing, but it can be ignored (the environment does close).
-    # We need to do this to correctly record the final video.
-    try:
-        env.close()
-    except Exception:
-        pass
-
-    # Add videos to wandb logging if we want to record it
-    if wandb is not None and wandb.run:
-        for episode in range(config["TEST_EPISODES"]):
-            completed_process = subprocess.run(("ffmpeg", "-nostats", "-y", "-i", f"test_videos/{episode}.mp4", "test_videos/encoded.mp4"))
-            if completed_process.returncode == 0:
-                wandb.log({f"video": wandb.Video("test_videos/encoded.mp4", caption=f"Evaluation video {episode}")})
-            else:
-                print("[Warning] Encoding test video was not succesfull. Wandb will not contain a evaluation video.")
+    env.close()
 
 
 def main():
