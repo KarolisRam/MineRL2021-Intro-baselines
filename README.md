@@ -40,12 +40,6 @@ python RL_plus_script.py
 ```
 The BC and RL ones come with pretrained models. If you want to train them yourself, you will have to uncomment the `train()` line at the end of the file.
 
-## Weights & Biases integration
-
-Baselines come with an integration for [Weights & Biases](https://wandb.ai/) logging, for demonstration purposes. To use them you need to install W&B with `pip install wandb` and uncomment lines in the baseline codes.
-
-This will allow easy logging of training runs and evaluation episodes to online dashboards. Especially the logging of videos is handy if you wish to debug what your agent is doing!
-
 ## Submittable repositories  
 
 The following links will lead you to submittable versions of the baselines:
@@ -68,6 +62,12 @@ Some videos of agents in action (best watched at 2x speed). Filmed using the [in
 [MineRL fully scripted agent, good seed](https://www.youtube.com/watch?v=xtPPwPmPmkU)  
 [MineRL fully scripted agent, bad seed](https://www.youtube.com/watch?v=0-uTKbHklmY)  
 [MineRL RL trained on Treechop + scripted agent](https://www.youtube.com/watch?v=dtH_Yn0yWLI)  
+
+## Weights & Biases integration
+
+The RL baselines come with an integration for [Weights & Biases](https://wandb.ai/) logging, for demonstration purposes. To use them you need to install W&B with `pip install wandb` and uncomment lines in the baseline codes.
+
+This will allow easy logging of training runs and evaluation episodes to online dashboards. Especially the logging of videos is handy if you wish to debug what your agent is doing!
 
 
 ## Credits
